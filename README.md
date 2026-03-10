@@ -1,6 +1,6 @@
-# Vanguard Chess Engine
+# Self-Learning Chess Engine
 
-A bitboard-based chess engine written in Python.
+A bitboard-based chess engine written in Python with a focus on reinforcement learning.
 
 ## Motivation
 Trying to learn more about bit manipulation, search algorithms (Alpha-Beta pruning) and eventually reinforcement learning. This is a work in progress.
