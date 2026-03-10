@@ -1,0 +1,1 @@
+# Vanguard Chess Core
