@@ -7,6 +7,6 @@ setup(
     install_requires=[
         "numpy",
     ],
-    author="ou1534s",
+    author="Ozan Ucar",
     description="A self-learning chess engine using bitboards and reinforcement learning.",
 )
