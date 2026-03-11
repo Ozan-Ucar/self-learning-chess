@@ -41,16 +41,25 @@ class Board:
         return sum(self.pieces[Color.WHITE]) | sum(self.pieces[Color.BLACK])
 
     def print_board(self):
-        full_board = self.get_occupancy()
+        piece_chars = {
+            Piece.PAWN: 'P', Piece.KNIGHT: 'N', Piece.BISHOP: 'B',
+            Piece.ROOK: 'R', Piece.QUEEN: 'Q', Piece.KING: 'K'
+        }
+        
         for r in range(7, -1, -1):
             row_str = f"{r+1} "
             for f in range(8):
                 idx = r * 8 + f
                 mask = 1 << idx
-                if full_board & mask:
-                    row_str += "X "
-                else:
-                    row_str += ". "
+                
+                char = ". "
+                for color in [Color.WHITE, Color.BLACK]:
+                    for pt in Piece:
+                        if self.pieces[color][pt] & mask:
+                            c = piece_chars[pt]
+                            char = (c if color == Color.WHITE else c.lower()) + " "
+                            break
+                row_str += char
             print(row_str)
         print("  a b c d e f g h")
 
