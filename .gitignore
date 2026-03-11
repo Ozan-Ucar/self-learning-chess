@@ -9,3 +9,13 @@ ENV/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Local testing and debug scripts
+test_run.py
+
+# Editor and OS specific
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
