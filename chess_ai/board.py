@@ -117,9 +117,10 @@ class Board:
         return False
 
     def is_in_check(self, color):
-        king_pos = bin(self.pieces[color][Piece.KING]).rfind('1')
-        if king_pos == -1: return False # Should not happen in real chess
-        return self.is_attacked(63 - king_pos, 1 - color)
+        king_bb = self.pieces[color][Piece.KING]
+        if not king_bb: return False 
+        king_square = king_bb.bit_length() - 1
+        return self.is_attacked(king_square, 1 - color)
 
     def get_legal_moves(self):
         # We'll need a better piece-to-moves map, but this works for now
