@@ -54,3 +54,16 @@ def get_sliding_moves(square_mask, occupied, color_occupied, directions):
             moves |= curr
             if curr & occupied: break # Hit any piece (after adding capture)
     return moves
+
+def get_king_moves(king_bitboard):
+    moves = 0
+    # The king moves one square in any direction
+    moves |= (king_bitboard << 8) # N
+    moves |= (king_bitboard >> 8) # S
+    moves |= (king_bitboard << 1) & ~FILE_A # E
+    moves |= (king_bitboard >> 1) & ~FILE_H # W
+    moves |= (king_bitboard << 9) & ~FILE_A # NE
+    moves |= (king_bitboard << 7) & ~FILE_H # NW
+    moves |= (king_bitboard >> 7) & ~FILE_A # SE
+    moves |= (king_bitboard >> 9) & ~FILE_H # SW
+    return moves
