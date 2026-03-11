@@ -53,3 +53,36 @@ class Board:
                     row_str += ". "
             print(row_str)
         print("  a b c d e f g h")
+
+    def make_move(self, move):
+        # Simplistic move execution for search (no castling/en passant yet)
+        color = self.turn
+        opponent = 1 - color
+        
+        # Remove moving piece from its current square
+        self.pieces[color][move.piece_type] &= ~(1 << move.from_sq)
+        
+        # Handle captures
+        if move.captured_piece is not None:
+             self.pieces[opponent][move.captured_piece] &= ~(1 << move.to_sq)
+             
+        # Add piece to destination square
+        if move.promotion is not None:
+            self.pieces[color][move.promotion] |= (1 << move.to_sq)
+        else:
+            self.pieces[color][move.piece_type] |= (1 << move.to_sq)
+            
+        self.turn = opponent
+
+    def unmake_move(self, move):
+        # Reverse the move logic
+        self.turn = 1 - self.turn
+        color = self.turn
+        opponent = 1 - color
+        
+        target_piece = move.promotion if move.promotion is not None else move.piece_type
+        self.pieces[color][target_piece] &= ~(1 << move.to_sq)
+        self.pieces[color][move.piece_type] |= (1 << move.from_sq)
+        
+        if move.captured_piece is not None:
+            self.pieces[opponent][move.captured_piece] |= (1 << move.to_sq)
