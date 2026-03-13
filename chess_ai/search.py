@@ -5,6 +5,8 @@ def minimax(board, depth, alpha, beta, maximizing_player):
         return get_full_evaluation(board)
 
     legal_moves = board.get_legal_moves()
+    # captures first
+    legal_moves.sort(key=lambda m: m.captured_piece is not None, reverse=True)
     
     if not legal_moves:
         if board.is_in_check(board.turn):
@@ -45,6 +47,9 @@ def find_best_move(board, depth):
     legal_moves = board.get_legal_moves()
     if not legal_moves:
         return None
+
+    # Sorting for efficiency
+    legal_moves.sort(key=lambda m: m.captured_piece is not None, reverse=True)
         
     for move in legal_moves:
         board.make_move(move)
