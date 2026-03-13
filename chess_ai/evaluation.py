@@ -1,6 +1,7 @@
 from .constants import Piece, Color
 
-# Standard material weights
+# Standard material weights (Simplified for now)
+# TODO: Add Piece-Square Tables (PST) to encourage center control
 PIECE_VALUES = {
     Piece.PAWN: 100,
     Piece.KNIGHT: 320,
@@ -12,16 +13,15 @@ PIECE_VALUES = {
 
 def evaluate_material(board):
     score = 0
-    # Simple counting of set bits (popcount) multiplied by value
+    # TODO: Optimize this with bit-count instructions if possible
     for piece_type in Piece:
         white_count = bin(board.pieces[Color.WHITE][piece_type]).count('1')
         black_count = bin(board.pieces[Color.BLACK][piece_type]).count('1')
         
         score += (white_count - black_count) * PIECE_VALUES[piece_type]
     
-    # Return positive for white advantage, negative for black
     return score
 
 def get_full_evaluation(board):
-    # This will later include positional tables, mobility, and the neural network
+    # TODO: Add mobility scoring and king safety
     return evaluate_material(board)
