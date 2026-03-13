@@ -96,6 +96,34 @@ class Board:
         if move.captured_piece is not None:
             self.pieces[opponent][move.captured_piece] |= (1 << move.to_sq)
 
+    def get_fen(self):
+        # A simple FEN generator for debugging with external tools
+        fen = ""
+        for r in range(7, -1, -1):
+            empty = 0
+            for f in range(8):
+                mask = 1 << (r * 8 + f)
+                found = False
+                for color in [Color.WHITE, Color.BLACK]:
+                    for pt in Piece:
+                        if self.pieces[color][pt] & mask:
+                            if empty > 0:
+                                fen += str(empty)
+                                empty = 0
+                            char = "PNBRQK"[pt]
+                            fen += char if color == Color.WHITE else char.lower()
+                            found = True
+                            break
+                if not found:
+                    empty += 1
+            if empty > 0:
+                fen += str(empty)
+            if r > 0:
+                fen += "/"
+        
+        turn = "w" if self.turn == Color.WHITE else "b"
+        return f"{fen} {turn} - - 0 1"
+
     def is_attacked(self, square, by_color):
         # Checks if a square is attacked by any piece of the given color
         square_mask = 1 << square
