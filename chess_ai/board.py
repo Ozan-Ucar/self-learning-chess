@@ -63,11 +63,26 @@ class Board:
             return sum(self.pieces[color])
         return sum(self.pieces[Color.WHITE]) | sum(self.pieces[Color.BLACK])
 
-    def print_board(self):
+    def print_board(self, pretty=False):
+        import sys
+        import os
+        
+        is_windows = os.name == 'nt'
+        if is_windows:
+            os.system("") # Enable ANSI escape sequences in Windows terminal
+            
+        if pretty and hasattr(sys.stdout, 'reconfigure') and sys.stdout.encoding != 'utf-8':
+            sys.stdout.reconfigure(encoding='utf-8')
+            
         piece_chars = {
             Piece.PAWN: 'P', Piece.KNIGHT: 'N', Piece.BISHOP: 'B',
             Piece.ROOK: 'R', Piece.QUEEN: 'Q', Piece.KING: 'K'
         }
+        
+        # Hollow pieces (look cleaner on dark terminals, avoid emoji substitution on Windows)
+        hollow = {Piece.PAWN: '♙', Piece.KNIGHT: '♘', Piece.BISHOP: '♗', Piece.ROOK: '♖', Piece.QUEEN: '♕', Piece.KING: '♔'}
+        # Solid pieces (Windows renders these as purple emojis incorrectly)
+        solid  = {Piece.PAWN: '♟', Piece.KNIGHT: '♞', Piece.BISHOP: '♝', Piece.ROOK: '♜', Piece.QUEEN: '♛', Piece.KING: '♚'}
         
         for r in range(7, -1, -1):
             row_str = f"{r+1} "
@@ -79,12 +94,23 @@ class Board:
                 for color in [Color.WHITE, Color.BLACK]:
                     for pt in Piece:
                         if self.pieces[color][pt] & mask:
-                            c = piece_chars[pt]
-                            char = (c if color == Color.WHITE else c.lower()) + " "
+                            if pretty:
+                                if is_windows:
+                                    # Fallback for Windows: Use hollow pieces for both, color Black blue/cyan
+                                    if color == Color.WHITE:
+                                        char = hollow[pt] + " "
+                                    else:
+                                        char = f"\033[36m{hollow[pt]}\033[0m " # 36m is Cyan
+                                else:
+                                    char = (hollow[pt] if color == Color.WHITE else solid[pt]) + " "
+                            else:
+                                c = piece_chars[pt]
+                                char = (c if color == Color.WHITE else c.lower()) + " "
                             break
                 row_str += char
             print(row_str)
         print("  a b c d e f g h")
+
 
     def make_move(self, move):
         # Simplistic move execution for search (no castling/en passant yet)
