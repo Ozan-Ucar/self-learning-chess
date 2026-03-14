@@ -11,29 +11,36 @@ class Board:
         self.reset_board()
 
     def reset_board(self):
-        # Pawns
-        self.pieces[Color.WHITE][Piece.PAWN] = RANK_2
-        self.pieces[Color.BLACK][Piece.PAWN] = RANK_7
-
-        # Knights
-        self.pieces[Color.WHITE][Piece.KNIGHT] = 0x42
-        self.pieces[Color.BLACK][Piece.KNIGHT] = 0x4200000000000000
-
-        # Bishops
-        self.pieces[Color.WHITE][Piece.BISHOP] = 0x24
-        self.pieces[Color.BLACK][Piece.BISHOP] = 0x2400000000000000
-
-        # Rooks
-        self.pieces[Color.WHITE][Piece.ROOK] = 0x81
-        self.pieces[Color.BLACK][Piece.ROOK] = 0x8100000000000000
-
-        # Queens
-        self.pieces[Color.WHITE][Piece.QUEEN] = 0x08
-        self.pieces[Color.BLACK][Piece.QUEEN] = 0x0800000000000000
-
-        # Kings
-        self.pieces[Color.WHITE][Piece.KING] = 0x10
-        self.pieces[Color.BLACK][Piece.KING] = 0x1000000000000000
+        # The standard starting position FEN
+        self.set_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        
+    def set_from_fen(self, fen):
+        # Clear board
+        for c in [Color.WHITE, Color.BLACK]:
+            for p in Piece:
+                self.pieces[c][p] = 0
+                
+        parts = fen.split()
+        if not parts: return
+        board_str = parts[0]
+        
+        row, col = 7, 0
+        for char in board_str:
+            if char == '/':
+                row -= 1
+                col = 0
+            elif char.isdigit():
+                col += int(char)
+            else:
+                color = Color.WHITE if char.isupper() else Color.BLACK
+                c_idx = 'PNBRQK'.index(char.upper())
+                pt = Piece(c_idx)
+                
+                self.pieces[color][pt] |= (1 << (row * 8 + col))
+                col += 1
+                
+        if len(parts) > 1:
+            self.turn = Color.WHITE if parts[1] == 'w' else Color.BLACK
 
     def get_occupancy(self, color=None):
         if color is not None:
