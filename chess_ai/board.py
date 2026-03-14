@@ -49,6 +49,14 @@ class Board:
                 
         if len(parts) > 1:
             self.turn = Color.WHITE if parts[1] == 'w' else Color.BLACK
+            
+        # Parse castling rights from FEN
+        # Reset all first
+        self.castling_rights = { 'K': False, 'Q': False, 'k': False, 'q': False }
+        if len(parts) > 2 and parts[2] != '-':
+            for right in parts[2]:
+                if right in self.castling_rights:
+                    self.castling_rights[right] = True
 
     def get_occupancy(self, color=None):
         if color is not None:
