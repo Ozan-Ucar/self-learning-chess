@@ -1,5 +1,14 @@
 from .constants import Piece, Color
 
+PIECE_VALUES = {
+    Piece.PAWN: 100,
+    Piece.KNIGHT: 320,
+    Piece.BISHOP: 330,
+    Piece.ROOK: 500,
+    Piece.QUEEN: 900,
+    Piece.KING: 20000 
+}
+
 # Piece-Square Tables to encourage positional play
 # Higher values mean better positions for those pieces
 PAWN_PST = [
