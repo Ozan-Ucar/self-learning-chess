@@ -104,6 +104,20 @@ class Board:
         else:
             self.pieces[color][move.piece_type] |= (1 << move.to_sq)
             
+        # Revoke castling rights if King or Rooks move
+        if move.piece_type == Piece.KING:
+            if color == Color.WHITE:
+                self.castling_rights['K'] = False
+                self.castling_rights['Q'] = False
+            else:
+                self.castling_rights['k'] = False
+                self.castling_rights['q'] = False
+        elif move.piece_type == Piece.ROOK:
+            if move.from_sq == 0: self.castling_rights['Q'] = False   # a1
+            elif move.from_sq == 7: self.castling_rights['K'] = False # h1
+            elif move.from_sq == 56: self.castling_rights['q'] = False # a8
+            elif move.from_sq == 63: self.castling_rights['k'] = False # h8
+            
         self.turn = opponent
 
     def unmake_move(self, move):
