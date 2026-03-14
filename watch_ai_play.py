@@ -6,7 +6,7 @@ def play_engine_vs_engine(num_halmoves=10):
     board = Board()
     print("engine showcase")
     print("Starting Position:")
-    board.print_board()
+    board.print_board(pretty=True)
     print("-" * 30)
 
     for i in range(num_halmoves):
@@ -30,7 +30,7 @@ def play_engine_vs_engine(num_halmoves=10):
         
         # Make the move on the board
         board.make_move(best_move)
-        board.print_board()
+        board.print_board(pretty=True)
 
 if __name__ == "__main__":
     play_engine_vs_engine(6) # Show 6 half-moves (3 full turns)
