@@ -8,7 +8,15 @@ class Board:
             Color.BLACK: [0] * 6
         }
         self.turn = Color.WHITE
+        
+        # Castling rights: K, Q, k, q
+        self.castling_rights = {
+            'K': True, 'Q': True,
+            'k': True, 'q': True
+        }
+        
         self.reset_board()
+
 
     def reset_board(self):
         # The standard starting position FEN
