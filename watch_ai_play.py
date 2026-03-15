@@ -47,7 +47,6 @@ def play_engine_vs_engine(max_halfmoves=200):
             
         # 3. Apply the move
         time_taken = end_time - start_time
-        move_info = f"{color_name} played: {best_move.to_uci()} (Time: {time_taken:.2f}s)"
         board.make_move(best_move)
         
         # 4. Render the new screen
@@ -56,13 +55,16 @@ def play_engine_vs_engine(max_halfmoves=200):
         board.print_board(pretty=True)
         print("-" * 30)
         
-        print(f"[{i+1}/{max_halfmoves}] {move_info}")
+        print(f"Move:    [{i+1}/{max_halfmoves}]")
+        print(f"Played:  {color_name} chose {best_move.to_uci()}")
+        print(f"Time:    {time_taken:.2f} seconds")
+        print("-" * 30)
         
         next_color = "White" if board.turn == 0 else "Black"
-        print(f"{next_color} is thinking...\n")
+        print(f"Status:  {next_color} is thinking...\n")
         
         # Print speed line once initially in case delay is 0
-        sys.stdout.write(f"\r[Speed: {delay:.1f}s/move] Use <- Slower | Faster ->      ")
+        sys.stdout.write(f"\rSpeed:   [{delay:.1f}s/move]  (Use <- Slower | Faster ->)      ")
         sys.stdout.flush()
         
         # 5. Delay and listen for keys
@@ -80,7 +82,7 @@ def play_engine_vs_engine(max_halfmoves=200):
                     elif key == b'+': delay = max(0.0, delay - 0.5)
                         
                     # Live update the speed text
-                    sys.stdout.write(f"\r[Speed: {delay:.1f}s/move] Use <- Slower | Faster ->      ")
+                    sys.stdout.write(f"\rSpeed:   [{delay:.1f}s/move]  (Use <- Slower | Faster ->)      ")
                     sys.stdout.flush()
             time.sleep(0.05)
 
