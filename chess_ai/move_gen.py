@@ -1,23 +1,27 @@
 from .constants import *
 
-def get_pawn_moves(pawns, color, occupied, enemy_pieces):
+def get_pawn_moves(pawns, color, occupied, enemy_pieces, ep_sq=None):
     moves = 0
+    ep_bb = (1 << ep_sq) if ep_sq is not None else 0
+    
     if color == Color.WHITE:
         # Single push
-        moves |= (pawns << 8) & ~occupied
+        step1 = (pawns << 8) & ~occupied
+        moves |= step1
         # Double push (only from rank 2)
-        moves |= ((pawns & RANK_2) << 16) & ~(occupied | (occupied << 8))
+        moves |= ((step1 & (RANK_3 | RANK_4)) << 8) & ~occupied # step1 must be true
         # Captures
-        moves |= (pawns << 7) & enemy_pieces & ~FILE_H
-        moves |= (pawns << 9) & enemy_pieces & ~FILE_A
+        moves |= (pawns << 7) & (enemy_pieces | ep_bb) & ~FILE_H
+        moves |= (pawns << 9) & (enemy_pieces | ep_bb) & ~FILE_A
     else:
         # Single push
-        moves |= (pawns >> 8) & ~occupied
+        step1 = (pawns >> 8) & ~occupied
+        moves |= step1
         # Double push (only from rank 7)
-        moves |= ((pawns & RANK_7) >> 16) & ~(occupied | (occupied >> 8))
+        moves |= ((step1 & (RANK_6 | RANK_5)) >> 8) & ~occupied # step1 must be true
         # Captures
-        moves |= (pawns >> 7) & enemy_pieces & ~FILE_A
-        moves |= (pawns >> 9) & enemy_pieces & ~FILE_H
+        moves |= (pawns >> 7) & (enemy_pieces | ep_bb) & ~FILE_A
+        moves |= (pawns >> 9) & (enemy_pieces | ep_bb) & ~FILE_H
     return moves
 
 def get_knight_moves(knight_bitboard):
