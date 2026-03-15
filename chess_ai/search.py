@@ -40,18 +40,25 @@ def minimax(board, depth, alpha, beta, maximizing_player):
                 break
         return min_eval
 
-def find_best_move(board, depth):
-    best_move = None
+import random
+
+def find_best_move(board, depth, epsilon=0.0):
+    legal_moves = board.get_legal_moves()
+    if not legal_moves:
+        return None
+
+    # epsilon greedy for exploration
+    # With probability 'epsilon', pick a completely random legal move.
+    if epsilon > 0.0 and random.random() < epsilon:
+        return random.choice(legal_moves)
+
+    best_moves = []
     best_value = -float('inf') if board.turn == 0 else float('inf')
     
     alpha = -float('inf')
     beta = float('inf')
     
-    legal_moves = board.get_legal_moves()
-    if not legal_moves:
-        return None
-
-    # Sorting for efficiency
+    # sort captures first
     legal_moves.sort(key=lambda m: m.captured_piece is not None, reverse=True)
         
     for move in legal_moves:
@@ -62,12 +69,18 @@ def find_best_move(board, depth):
         if board.turn == 0: # White maximizing
             if board_value > best_value:
                 best_value = board_value
-                best_move = move
+                best_moves = [move]  # Reset best moves list
+            elif board_value == best_value:
+                best_moves.append(move) # Tie-breaking candidate
             alpha = max(alpha, best_value)
         else: # Black minimizing
             if board_value < best_value:
                 best_value = board_value
-                best_move = move
+                best_moves = [move]  # Reset best moves list
+            elif board_value == best_value:
+                best_moves.append(move) # Tie-breaking candidate
             beta = min(beta, best_value)
             
-    return best_move
+    # Random Tie-Breaking: If multiple moves yield the exact same score,
+    # pick a random one instead of always taking the first. (Removes deterministic loops).
+    return random.choice(best_moves) if best_moves else None
