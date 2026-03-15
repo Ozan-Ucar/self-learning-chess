@@ -13,6 +13,9 @@ def minimax(board, depth, alpha, beta, maximizing_player):
             # Checkmate: negative infinity for the side in check
             return -100000 if maximizing_player else 100000
         return 0 # Stalemate
+        
+    if board.is_repetition():
+        return 0 # Draw by threefold repetition
 
     if maximizing_player:
         max_eval = -float('inf')

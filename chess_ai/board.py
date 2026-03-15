@@ -8,6 +8,8 @@ class Board:
             Color.BLACK: [0] * 6
         }
         self.turn = Color.WHITE
+        self.en_passant_sq = None
+        self.history = []
         
         # Castling rights: K, Q, k, q
         self.castling_rights = {
@@ -57,6 +59,25 @@ class Board:
             for right in parts[2]:
                 if right in self.castling_rights:
                     self.castling_rights[right] = True
+                    
+        self.en_passant_sq = None
+        if len(parts) > 3 and parts[3] != '-':
+            f = 'abcdefgh'.index(parts[3][0])
+            r = int(parts[3][1]) - 1
+            self.en_passant_sq = r * 8 + f
+            
+        self.history = []
+        self.state_history = []
+
+    def get_hash(self):
+        return hash(tuple(self.pieces[Color.WHITE] + self.pieces[Color.BLACK] + [self.turn, self.en_passant_sq] + list(self.castling_rights.values())))
+        
+    def is_repetition(self):
+        if not hasattr(self, 'history'): return False
+        # If the current state has already appeared 2 times in history, 
+        # this makes it the 3rd time (Threefold Repetition)
+        return self.history.count(self.get_hash()) >= 2
+
 
     def get_occupancy(self, color=None):
         if color is not None:
@@ -113,7 +134,12 @@ class Board:
 
 
     def make_move(self, move):
-        # Simplistic move execution for search (no castling/en passant yet)
+        if not hasattr(self, 'history'): self.history = []
+        if not hasattr(self, 'state_history'): self.state_history = []
+        
+        self.history.append(self.get_hash())
+        self.state_history.append((self.en_passant_sq, dict(self.castling_rights)))
+        
         color = self.turn
         opponent = 1 - color
         
@@ -122,13 +148,37 @@ class Board:
         
         # Handle captures
         if move.captured_piece is not None:
-             self.pieces[opponent][move.captured_piece] &= ~(1 << move.to_sq)
+             if move.is_en_passant:
+                 ep_capture_sq = (move.from_sq // 8) * 8 + (move.to_sq % 8)
+                 self.pieces[opponent][move.captured_piece] &= ~(1 << ep_capture_sq)
+             else:
+                 self.pieces[opponent][move.captured_piece] &= ~(1 << move.to_sq)
              
         # Add piece to destination square
         if move.promotion is not None:
             self.pieces[color][move.promotion] |= (1 << move.to_sq)
         else:
             self.pieces[color][move.piece_type] |= (1 << move.to_sq)
+            
+        # Handle Castling (move the rook)
+        if move.is_castling:
+            if move.to_sq == 6:   # White Kingside
+                self.pieces[color][Piece.ROOK] &= ~(1 << 7)
+                self.pieces[color][Piece.ROOK] |= (1 << 5)
+            elif move.to_sq == 2: # White Queenside
+                self.pieces[color][Piece.ROOK] &= ~(1 << 0)
+                self.pieces[color][Piece.ROOK] |= (1 << 3)
+            elif move.to_sq == 62: # Black Kingside
+                self.pieces[color][Piece.ROOK] &= ~(1 << 63)
+                self.pieces[color][Piece.ROOK] |= (1 << 61)
+            elif move.to_sq == 58: # Black Queenside
+                self.pieces[color][Piece.ROOK] &= ~(1 << 56)
+                self.pieces[color][Piece.ROOK] |= (1 << 59)
+                
+        # Update En Passant Target
+        self.en_passant_sq = None
+        if move.piece_type == Piece.PAWN and abs(move.from_sq - move.to_sq) == 16:
+            self.en_passant_sq = (move.from_sq + move.to_sq) // 2
             
         # Revoke castling rights if King or Rooks move
         if move.piece_type == Piece.KING:
@@ -144,9 +194,19 @@ class Board:
             elif move.from_sq == 56: self.castling_rights['q'] = False # a8
             elif move.from_sq == 63: self.castling_rights['k'] = False # h8
             
+        # Also revoke if a rook on corners gets captured
+        if move.to_sq == 0: self.castling_rights['Q'] = False
+        elif move.to_sq == 7: self.castling_rights['K'] = False
+        elif move.to_sq == 56: self.castling_rights['q'] = False
+        elif move.to_sq == 63: self.castling_rights['k'] = False
+            
         self.turn = opponent
 
     def unmake_move(self, move):
+        if hasattr(self, 'history') and self.history:
+            self.history.pop()
+        self.en_passant_sq, self.castling_rights = self.state_history.pop()
+            
         # Reverse the move logic
         self.turn = 1 - self.turn
         color = self.turn
@@ -157,7 +217,25 @@ class Board:
         self.pieces[color][move.piece_type] |= (1 << move.from_sq)
         
         if move.captured_piece is not None:
-            self.pieces[opponent][move.captured_piece] |= (1 << move.to_sq)
+            if move.is_en_passant:
+                 ep_capture_sq = (move.from_sq // 8) * 8 + (move.to_sq % 8)
+                 self.pieces[opponent][move.captured_piece] |= (1 << ep_capture_sq)
+            else:
+                 self.pieces[opponent][move.captured_piece] |= (1 << move.to_sq)
+                 
+        if move.is_castling:
+            if move.to_sq == 6:   # White Kingside
+                self.pieces[color][Piece.ROOK] &= ~(1 << 5)
+                self.pieces[color][Piece.ROOK] |= (1 << 7)
+            elif move.to_sq == 2: # White Queenside
+                self.pieces[color][Piece.ROOK] &= ~(1 << 3)
+                self.pieces[color][Piece.ROOK] |= (1 << 0)
+            elif move.to_sq == 62: # Black Kingside
+                self.pieces[color][Piece.ROOK] &= ~(1 << 61)
+                self.pieces[color][Piece.ROOK] |= (1 << 63)
+            elif move.to_sq == 58: # Black Queenside
+                self.pieces[color][Piece.ROOK] &= ~(1 << 59)
+                self.pieces[color][Piece.ROOK] |= (1 << 56)
 
     def get_fen(self):
         # A simple FEN generator for debugging with external tools
@@ -243,11 +321,22 @@ class Board:
                 # Get pseudo-legal moves for this piece
                 pseudo_moves = 0
                 if piece_type == Piece.PAWN:
-                    pseudo_moves = get_pawn_moves(1 << i, color, occupied, enemy_pieces_occ)
+                    pseudo_moves = get_pawn_moves(1 << i, color, occupied, enemy_pieces_occ, self.en_passant_sq)
                 elif piece_type == Piece.KNIGHT:
                     pseudo_moves = get_knight_moves(1 << i) & ~own_pieces
                 elif piece_type == Piece.KING:
                     pseudo_moves = get_king_moves(1 << i) & ~own_pieces
+                    # Castling moves
+                    if color == Color.WHITE and i == 4 and not self.is_attacked(4, Color.BLACK):
+                        if self.castling_rights['K'] and not (occupied & 0x60) and not self.is_attacked(5, Color.BLACK):
+                            pseudo_moves |= (1 << 6) # g1
+                        if self.castling_rights['Q'] and not (occupied & 0xE) and not self.is_attacked(3, Color.BLACK):
+                            pseudo_moves |= (1 << 2) # c1
+                    elif color == Color.BLACK and i == 60 and not self.is_attacked(60, Color.WHITE):
+                        if self.castling_rights['k'] and not (occupied & 0x6000000000000000) and not self.is_attacked(61, Color.WHITE):
+                            pseudo_moves |= (1 << 62) # g8
+                        if self.castling_rights['q'] and not (occupied & 0x0E00000000000000) and not self.is_attacked(59, Color.WHITE):
+                            pseudo_moves |= (1 << 58) # c8
                 elif piece_type == Piece.BISHOP:
                     pseudo_moves = get_sliding_moves(1 << i, occupied, own_pieces, (NE, NW, SE, SW))
                 elif piece_type == Piece.ROOK:
@@ -259,18 +348,31 @@ class Board:
                 for j in range(64):
                     if not (pseudo_moves & (1 << j)): continue
                     
-                    # Create move object
                     captured = None
                     for pt in Piece:
                         if self.pieces[1-color][pt] & (1 << j):
                             captured = pt; break
+                            
+                    is_ep = False
+                    if piece_type == Piece.PAWN and j == self.en_passant_sq:
+                        captured = Piece.PAWN
+                        is_ep = True
+                        
+                    is_castling = False
+                    if piece_type == Piece.KING and abs(i - j) == 2:
+                        is_castling = True
+
+                    moves_to_try = []
+                    if piece_type == Piece.PAWN and (j // 8 == 0 or j // 8 == 7): # Promotion
+                        for p in [Piece.QUEEN, Piece.ROOK, Piece.BISHOP, Piece.KNIGHT]:
+                            moves_to_try.append(Move(i, j, piece_type, captured_piece=captured, promotion=p))
+                    else:
+                        moves_to_try.append(Move(i, j, piece_type, captured_piece=captured, is_castling=is_castling, is_en_passant=is_ep))
                     
-                    move = Move(i, j, piece_type, captured_piece=captured)
-                    
-                    # Try it
-                    self.make_move(move)
-                    if not self.is_in_check(color):
-                        legal_moves.append(move)
-                    self.unmake_move(move)
-                    
+                    for move in moves_to_try:
+                        self.make_move(move)
+                        if not self.is_in_check(color):
+                            legal_moves.append(move)
+                        self.unmake_move(move)
+                        
         return legal_moves
