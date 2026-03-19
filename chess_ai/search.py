@@ -1,4 +1,15 @@
-from .evaluation import get_full_evaluation
+from .evaluation import get_full_evaluation, PIECE_VALUES
+
+def _move_order_score(move):
+    # mvv lva
+    
+    score = 0
+    if move.captured_piece is not None:
+        score += PIECE_VALUES.get(move.captured_piece, 0) * 10
+        score -= PIECE_VALUES.get(move.piece_type, 0)
+    if move.promotion is not None:
+        score += 800
+    return score
 
 def minimax(board, depth, alpha, beta, maximizing_player):
     if depth == 0:
@@ -6,7 +17,7 @@ def minimax(board, depth, alpha, beta, maximizing_player):
 
     legal_moves = board.get_legal_moves()
     # captures first
-    legal_moves.sort(key=lambda m: m.captured_piece is not None, reverse=True)
+    legal_moves.sort(key=_move_order_score, reverse=True)
     
     if not legal_moves:
         if board.is_in_check(board.turn):
@@ -59,7 +70,7 @@ def find_best_move(board, depth, epsilon=0.0):
     beta = float('inf')
     
     # sort captures first
-    legal_moves.sort(key=lambda m: m.captured_piece is not None, reverse=True)
+    legal_moves.sort(key=_move_order_score, reverse=True)
         
     for move in legal_moves:
         board.make_move(move)
