@@ -33,6 +33,50 @@ KNIGHT_PST = [
     -50,-40,-30,-30,-30,-30,-40,-50
 ]
 
+BISHOP_PST = [
+    -20,-10,-10,-10,-10,-10,-10,-20,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -10,  0,  5, 10, 10,  5,  0,-10,
+    -10,  5,  5, 10, 10,  5,  5,-10,
+    -10,  0, 10, 10, 10, 10,  0,-10,
+    -10, 10, 10, 10, 10, 10, 10,-10,
+    -10,  5,  0,  0,  0,  0,  5,-10,
+    -20,-10,-10,-10,-10,-10,-10,-20
+]
+
+ROOK_PST = [
+     0,  0,  0,  5,  5,  0,  0,  0,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+     5, 10, 10, 10, 10, 10, 10,  5,
+     0,  0,  0,  0,  0,  0,  0,  0
+]
+
+QUEEN_PST = [
+    -20,-10,-10, -5, -5,-10,-10,-20,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -10,  0,  5,  5,  5,  5,  0,-10,
+     -5,  0,  5,  5,  5,  5,  0, -5,
+      0,  0,  5,  5,  5,  5,  0, -5,
+    -10,  5,  5,  5,  5,  5,  0,-10,
+    -10,  0,  5,  0,  0,  0,  0,-10,
+    -20,-10,-10, -5, -5,-10,-10,-20
+]
+
+KING_PST = [
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -20,-30,-30,-40,-40,-30,-30,-20,
+    -10,-20,-20,-20,-20,-20,-20,-10,
+     20, 20,  0,  0,  0,  0, 20, 20,
+     20, 30, 10,  0,  0, 10, 30, 20
+]
+
 def evaluate_material(board):
     score = 0
     for piece_type in Piece:
@@ -45,14 +89,18 @@ def evaluate_material(board):
         score += (white_count - black_count) * PIECE_VALUES[piece_type]
         
         # Positional bonus (PST)
-        if piece_type == Piece.PAWN:
+        pst = None
+        if piece_type == Piece.PAWN: pst = PAWN_PST
+        elif piece_type == Piece.KNIGHT: pst = KNIGHT_PST
+        elif piece_type == Piece.BISHOP: pst = BISHOP_PST
+        elif piece_type == Piece.ROOK: pst = ROOK_PST
+        elif piece_type == Piece.QUEEN: pst = QUEEN_PST
+        elif piece_type == Piece.KING: pst = KING_PST
+        
+        if pst:
             for i in range(64):
-                if white_bits & (1 << i): score += PAWN_PST[63-i]
-                if black_bits & (1 << i): score -= PAWN_PST[i]
-        elif piece_type == Piece.KNIGHT:
-            for i in range(64):
-                if white_bits & (1 << i): score += KNIGHT_PST[63-i]
-                if black_bits & (1 << i): score -= KNIGHT_PST[i]
+                if white_bits & (1 << i): score += pst[63-i]
+                if black_bits & (1 << i): score -= pst[i]
     
     return score
 
