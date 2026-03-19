@@ -37,19 +37,19 @@ def get_knight_moves(knight_bitboard):
     return moves
 
 def get_sliding_moves(square_mask, occupied, color_occupied, directions):
+    # Edge masks for each direction to prevent wrapping
+    edge_masks = {
+        N: RANK_8, S: RANK_1, E: FILE_H, W: FILE_A,
+        NE: RANK_8 | FILE_H, NW: RANK_8 | FILE_A,
+        SE: RANK_1 | FILE_H, SW: RANK_1 | FILE_A
+    }
+    
     moves = 0
     for d in directions:
+        edge = edge_masks[d]
         curr = square_mask
         while True:
-            # Check for board edges before shift
-            if d == N and (curr & RANK_8): break
-            if d == S and (curr & RANK_1): break
-            if d == E and (curr & FILE_H): break
-            if d == W and (curr & FILE_A): break
-            if d == NE and (curr & (RANK_8 | FILE_H)): break
-            if d == NW and (curr & (RANK_8 | FILE_A)): break
-            if d == SE and (curr & (RANK_1 | FILE_H)): break
-            if d == SW and (curr & (RANK_1 | FILE_A)): break
+            if curr & edge: break
 
             if d > 0: curr <<= d
             else: curr >>= abs(d)
