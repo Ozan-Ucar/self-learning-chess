@@ -104,6 +104,18 @@ def evaluate_material(board):
     
     return score
 
+def evaluate_center_control(board):
+    # Bonus for occupying the central squares (d4, e4, d5, e5)
+    center_mask = 0x0000001818000000
+    score = 0
+    white_occ = board.get_occupancy(Color.WHITE)
+    black_occ = board.get_occupancy(Color.BLACK)
+    
+    score += bin(white_occ & center_mask).count('1') * 30
+    score -= bin(black_occ & center_mask).count('1') * 30
+    return score
+
 def get_full_evaluation(board):
-    # TODO: Add mobility scoring and king safety
-    return evaluate_material(board)
+    score = evaluate_material(board)
+    score += evaluate_center_control(board)
+    return score
