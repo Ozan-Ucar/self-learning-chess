@@ -11,7 +11,13 @@ def _move_order_score(move):
         score += 800
     return score
 
+# track nodes
+nodes_searched = 0
+
 def minimax(board, depth, alpha, beta, maximizing_player):
+    global nodes_searched
+    nodes_searched += 1
+    
     if depth == 0:
         return get_full_evaluation(board)
 
