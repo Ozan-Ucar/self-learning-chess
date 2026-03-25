@@ -1,3 +1,4 @@
+import time
 from .evaluation import get_full_evaluation, PIECE_VALUES
 
 def _move_order_score(move):
@@ -101,3 +102,29 @@ def find_best_move(board, depth, epsilon=0.0):
     # Random Tie-Breaking: If multiple moves yield the exact same score,
     # pick a random one instead of always taking the first. (Removes deterministic loops).
     return random.choice(best_moves) if best_moves else None
+
+def find_best_move_timed(board, time_limit=2.0, max_depth=8, epsilon=0.0):
+    # iterative deepening in time limit
+    global nodes_searched
+    nodes_searched = 0
+    start = time.time()
+    
+    best_move = None
+    best_depth = 0
+    
+    for depth in range(1, max_depth + 1):
+        elapsed = time.time() - start
+        if elapsed >= time_limit:
+            break
+        
+        move = find_best_move(board, depth, epsilon)
+        if move is not None:
+            best_move = move
+            best_depth = depth
+        
+        elapsed = time.time() - start
+        # If we used more than half the time, don't start next depth
+        if elapsed > time_limit * 0.5:
+            break
+    
+    return best_move, best_depth, nodes_searched

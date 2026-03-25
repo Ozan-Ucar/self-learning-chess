@@ -2,7 +2,7 @@ import time
 import os
 import sys
 from chess_ai.board import Board
-from chess_ai.search import find_best_move
+from chess_ai.search import find_best_move_timed
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -39,7 +39,7 @@ def play_engine_vs_engine(max_halfmoves=200):
         
         # 1. The Engine Thinks
         start_time = time.time()
-        best_move = find_best_move(board, depth=2)
+        best_move, depth_reached, nodes = find_best_move_timed(board, time_limit=1.5, max_depth=6)
         end_time = time.time()
         
         # 2. Check Game Over
@@ -72,6 +72,7 @@ def play_engine_vs_engine(max_halfmoves=200):
         
         print(f"Move:    [{i+1}/{max_halfmoves}]")
         print(f"Played:  {color_name} chose {best_move.to_uci()}")
+        print(f"Depth:   {depth_reached} | Nodes: {nodes:,}")
         print(f"Time:    {time_taken:.2f} seconds")
         print("-" * 30)
         
