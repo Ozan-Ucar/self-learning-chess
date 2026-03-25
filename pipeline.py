@@ -34,7 +34,7 @@ def generate_games(num_games=50, max_halfmoves=120, epsilon=0.2):
             
             for _ in range(max_halfmoves):
                 game_fens.append(board.get_fen())
-                best_move = find_best_move(board, depth=2, epsilon=epsilon)
+                best_move, _ = find_best_move(board, depth=2, epsilon=epsilon)
                 
                 if not best_move:
                     if board.is_in_check(board.turn):
@@ -140,7 +140,7 @@ def run_evaluation_match(num_games=10):
         outcome = 0.5
         
         for _ in range(150):
-            best_move = find_best_move(board, depth=3)
+            best_move, _ = find_best_move(board, depth=3)
             if not best_move:
                 if board.is_in_check(board.turn):
                     outcome = 0.0 if board.turn == 0 else 1.0

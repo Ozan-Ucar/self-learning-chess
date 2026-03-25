@@ -63,13 +63,13 @@ import random
 def find_best_move(board, depth, epsilon=0.0):
     legal_moves = board.get_legal_moves()
     if not legal_moves:
-        return None
+        return None, []
 
     # epsilon greedy for exploration
-    # With probability 'epsilon', pick a completely random legal move.
     if epsilon > 0.0 and random.random() < epsilon:
-        return random.choice(legal_moves)
+        return random.choice(legal_moves), []
 
+    scored_moves = []
     best_moves = []
     best_value = -float('inf') if board.turn == 0 else float('inf')
     
@@ -84,24 +84,29 @@ def find_best_move(board, depth, epsilon=0.0):
         board_value = minimax(board, depth - 1, alpha, beta, board.turn != 0)
         board.unmake_move(move)
         
+        scored_moves.append((move, board_value))
+        
         if board.turn == 0: # White maximizing
             if board_value > best_value:
                 best_value = board_value
-                best_moves = [move]  # Reset best moves list
+                best_moves = [move]
             elif board_value == best_value:
-                best_moves.append(move) # Tie-breaking candidate
+                best_moves.append(move)
             alpha = max(alpha, best_value)
         else: # Black minimizing
             if board_value < best_value:
                 best_value = board_value
-                best_moves = [move]  # Reset best moves list
+                best_moves = [move]
             elif board_value == best_value:
-                best_moves.append(move) # Tie-breaking candidate
+                best_moves.append(move)
             beta = min(beta, best_value)
-            
-    # Random Tie-Breaking: If multiple moves yield the exact same score,
-    # pick a random one instead of always taking the first. (Removes deterministic loops).
-    return random.choice(best_moves) if best_moves else None
+    
+    # sort best first
+    is_white = board.turn == 0
+    scored_moves.sort(key=lambda x: x[1], reverse=is_white)
+    
+    chosen = random.choice(best_moves) if best_moves else None
+    return chosen, scored_moves
 
 def find_best_move_timed(board, time_limit=2.0, max_depth=8, epsilon=0.0):
     # iterative deepening in time limit
@@ -111,20 +116,21 @@ def find_best_move_timed(board, time_limit=2.0, max_depth=8, epsilon=0.0):
     
     best_move = None
     best_depth = 0
+    best_candidates = []
     
     for depth in range(1, max_depth + 1):
         elapsed = time.time() - start
         if elapsed >= time_limit:
             break
         
-        move = find_best_move(board, depth, epsilon)
+        move, candidates = find_best_move(board, depth, epsilon)
         if move is not None:
             best_move = move
             best_depth = depth
+            best_candidates = candidates
         
         elapsed = time.time() - start
-        # If we used more than half the time, don't start next depth
         if elapsed > time_limit * 0.5:
             break
     
-    return best_move, best_depth, nodes_searched
+    return best_move, best_depth, nodes_searched, best_candidates

@@ -3,6 +3,7 @@ import os
 import sys
 from chess_ai.board import Board
 from chess_ai.search import find_best_move_timed
+from chess_ai.evaluation import get_nn_evaluation
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -22,6 +23,15 @@ def wait_for_restart():
             time.sleep(0.05)
     return False
 
+def format_score(score):
+    if score >= 300: return f"+{score} (winning)"
+    elif score >= 100: return f"+{score} (better)"
+    elif score > 30: return f"+{score} (slight edge)"
+    elif score >= -30: return f"{score} (equal)"
+    elif score > -100: return f"{score} (slight edge)"
+    elif score > -300: return f"{score} (worse)"
+    else: return f"{score} (losing)"
+
 def play_engine_vs_engine(max_halfmoves=200):
     board = Board()
     delay = 0.3 # seconds per move (use arrow keys to adjust)
@@ -39,7 +49,7 @@ def play_engine_vs_engine(max_halfmoves=200):
         
         # 1. The Engine Thinks
         start_time = time.time()
-        best_move, depth_reached, nodes = find_best_move_timed(board, time_limit=1.5, max_depth=6)
+        best_move, depth_reached, nodes, candidates = find_best_move_timed(board, time_limit=1.5, max_depth=6)
         end_time = time.time()
         
         # 2. Check Game Over
@@ -64,6 +74,10 @@ def play_engine_vs_engine(max_halfmoves=200):
         time_taken = end_time - start_time
         board.make_move(best_move)
         
+        # Get NN prediction for current position
+        nn_raw = get_nn_evaluation(board)
+        nn_pct = ((nn_raw / 2000) + 0.5) * 100 if nn_raw is not None else None
+        
         # 4. Render the new screen
         clear_screen()
         print("engine showcase")
@@ -73,13 +87,29 @@ def play_engine_vs_engine(max_halfmoves=200):
         print(f"Move:    [{i+1}/{max_halfmoves}]")
         print(f"Played:  {color_name} chose {best_move.to_uci()}")
         print(f"Depth:   {depth_reached} | Nodes: {nodes:,}")
-        print(f"Time:    {time_taken:.2f} seconds")
+        print(f"Time:    {time_taken:.2f}s")
         print("-" * 30)
         
+        # Show top 3 candidates the engine considered
+        if candidates:
+            top = candidates[:3]
+            print("Candidates:")
+            for rank, (m, s) in enumerate(top, 1):
+                marker = " <--" if m.to_uci() == best_move.to_uci() else ""
+                print(f"  {rank}. {m.to_uci():6s} Score: {format_score(s)}{marker}")
+        
+        # Show NN prediction
+        if nn_pct is not None:
+            bar_len = 20
+            filled = int(nn_pct / 100 * bar_len)
+            bar = "█" * filled + "░" * (bar_len - filled)
+            print(f"NN eval: [{bar}] {nn_pct:.0f}% White")
+        
+        print("-" * 30)
         next_color = "White" if board.turn == 0 else "Black"
         print(f"Status:  {next_color} is thinking...\n")
         
-        # Print speed line once initially in case delay is 0
+        # Print speed line
         sys.stdout.write(f"\rSpeed:   [{delay:.1f}s/move]  (S = Slower | F = Faster)      ")
         sys.stdout.flush()
         

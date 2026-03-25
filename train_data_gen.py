@@ -35,7 +35,7 @@ def generate_games(num_games=10, max_halfmoves=150, epsilon=0.15):
                 
                 # 2. Pick a move (use low depth for fast generation, but inject randomness)
                 # Epsilon means: with 15% probability, do something completely random
-                best_move = find_best_move(board, depth=2, epsilon=epsilon)
+                best_move, _ = find_best_move(board, depth=2, epsilon=epsilon)
                 
                 if not best_move:
                     if board.is_in_check(board.turn):

@@ -39,7 +39,7 @@ def uci_loop():
                 
         elif command == "go":
             # Simple fixed depth for now
-            best = find_best_move(board, depth=3)
+            best, _ = find_best_move(board, depth=3)
             if best:
                 print(f"bestmove {best.to_uci()}")
             else:
