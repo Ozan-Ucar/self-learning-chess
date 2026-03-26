@@ -28,8 +28,8 @@ def minimax(board, depth, alpha, beta, maximizing_player):
     
     if not legal_moves:
         if board.is_in_check(board.turn):
-            # Checkmate: negative infinity for the side in check
-            return -100000 if maximizing_player else 100000
+            # prefer faster mates (larger depth = shorter distance to mate from root)
+            return -100000 - depth if maximizing_player else 100000 + depth
         return 0 # Stalemate
         
     if board.is_repetition():
