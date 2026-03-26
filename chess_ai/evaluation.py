@@ -164,7 +164,13 @@ def get_nn_evaluation(board):
     # Scale to centipawn range for blending with handcrafted eval
     return (prediction - 0.5) * 2000
 
+_eval_cache = {}
+
 def get_full_evaluation(board):
+    fen = board.get_fen()
+    if fen in _eval_cache:
+        return _eval_cache[fen]
+        
     score = evaluate_material(board)
     score += evaluate_center_control(board)
     
@@ -173,5 +179,9 @@ def get_full_evaluation(board):
     if nn_score is not None:
         score = int(score * 0.7 + nn_score * 0.3)
     
+    _eval_cache[fen] = score
+    # simple cache memory management
+    if len(_eval_cache) > 50000:
+        _eval_cache.clear()
+        
     return score
-
